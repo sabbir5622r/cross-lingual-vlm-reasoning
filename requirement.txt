@@ -1,0 +1,10 @@
+datasets
+huggingface-hub
+numpy
+pandas
+pyarrow
+Pillow
+PyYAML
+requests
+scikit-learn
+tqdm
