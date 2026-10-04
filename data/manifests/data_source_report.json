@@ -1,0 +1,124 @@
+{
+  "created_at_utc": "2026-10-04T17:59:15.730403+00:00",
+  "project_name": "cross-lingual-vlm-reasoning",
+  "schema_version": 1,
+  "registry_path": "configs\\data_sources.yaml",
+  "local_sources": [
+    {
+      "section": "primary_sources",
+      "name": "vqa_v2",
+      "enabled": true,
+      "local_directory": "data\\raw\\vqa_v2",
+      "directory_exists": false,
+      "file_count": 0,
+      "total_bytes": 0,
+      "files": []
+    },
+    {
+      "section": "user_prepared_sources",
+      "name": "multilingual_alignment",
+      "enabled": true,
+      "local_directory": "data\\raw\\multilingual_alignment",
+      "directory_exists": false,
+      "file_count": 0,
+      "total_bytes": 0,
+      "files": []
+    },
+    {
+      "section": "user_prepared_sources",
+      "name": "cultural_multilingual_vqa",
+      "enabled": true,
+      "local_directory": "data\\raw\\cultural_multilingual_vqa",
+      "directory_exists": false,
+      "file_count": 0,
+      "total_bytes": 0,
+      "files": []
+    },
+    {
+      "section": "external_evaluation_sources",
+      "name": "cvqa",
+      "enabled": true,
+      "local_directory": "data\\raw\\cvqa",
+      "directory_exists": false,
+      "file_count": 0,
+      "total_bytes": 0,
+      "files": []
+    },
+    {
+      "section": "external_evaluation_sources",
+      "name": "xgqa",
+      "enabled": true,
+      "local_directory": "data\\raw\\xgqa",
+      "directory_exists": false,
+      "file_count": 0,
+      "total_bytes": 0,
+      "files": []
+    }
+  ],
+  "source_pages": [
+    {
+      "section": "primary_sources",
+      "name": "vqa_v2",
+      "source_page": "https://visualqa.org/download.html",
+      "status": "available",
+      "status_code": 200,
+      "error": null
+    },
+    {
+      "section": "user_prepared_sources",
+      "name": "multilingual_alignment",
+      "source_page": null,
+      "status": "not_listed",
+      "status_code": null,
+      "error": null
+    },
+    {
+      "section": "user_prepared_sources",
+      "name": "cultural_multilingual_vqa",
+      "source_page": null,
+      "status": "not_listed",
+      "status_code": null,
+      "error": null
+    },
+    {
+      "section": "external_evaluation_sources",
+      "name": "cvqa",
+      "source_page": "https://huggingface.co/datasets/afaji/cvqa",
+      "status": "available",
+      "status_code": 200,
+      "error": null
+    },
+    {
+      "section": "external_evaluation_sources",
+      "name": "xgqa",
+      "source_page": "https://huggingface.co/datasets/floschne/xgqa",
+      "status": "available",
+      "status_code": 200,
+      "error": null
+    }
+  ],
+  "huggingface_sources": [
+    {
+      "section": "external_evaluation_sources",
+      "name": "cvqa",
+      "dataset_id": "afaji/cvqa",
+      "status": "available",
+      "private": false,
+      "gated": false,
+      "file_count": 12,
+      "last_modified": "2024-11-27 17:42:19+00:00",
+      "error": null
+    },
+    {
+      "section": "external_evaluation_sources",
+      "name": "xgqa",
+      "dataset_id": "floschne/xgqa",
+      "status": "available",
+      "private": false,
+      "gated": false,
+      "file_count": 10,
+      "last_modified": "2024-05-23 14:13:12+00:00",
+      "error": null
+    }
+  ]
+}
