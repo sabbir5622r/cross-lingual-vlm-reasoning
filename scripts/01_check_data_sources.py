@@ -13,6 +13,12 @@ required_sections = [
     "split_policy",
 ]
 
+source_sections = [
+    "primary_sources",
+    "user_prepared_sources",
+    "external_evaluation_sources",
+]
+
 
 def read_registry(config_path):
     if not config_path.exists():
@@ -27,7 +33,7 @@ def read_registry(config_path):
     return registry
 
 
-def check_required_sections(registry):
+def validate_registry(registry):
     missing_sections = [
         section for section in required_sections if section not in registry
     ]
@@ -35,14 +41,6 @@ def check_required_sections(registry):
     if missing_sections:
         missing_text = ", ".join(missing_sections)
         raise ValueError(f"Missing registry sections: {missing_text}")
-
-
-def check_source_entries(registry):
-    source_sections = [
-        "primary_sources",
-        "user_prepared_sources",
-        "external_evaluation_sources",
-    ]
 
     problems = []
 
@@ -53,13 +51,15 @@ def check_source_entries(registry):
             problems.append(f"{section_name} must be a dictionary")
             continue
 
-        for source_name, source_details in sources.items():
-            if not isinstance(source_details, dict):
+        for source_name, details in sources.items():
+            if not isinstance(details, dict):
                 problems.append(f"{section_name}.{source_name} must be a dictionary")
                 continue
 
-            for field_name in ["enabled", "role", "download_mode", "local_directory"]:
-                if field_name not in source_details:
+            needed_fields = ["enabled", "role", "download_mode", "local_directory"]
+
+            for field_name in needed_fields:
+                if field_name not in details:
                     problems.append(
                         f"{section_name}.{source_name} is missing {field_name}"
                     )
@@ -69,39 +69,19 @@ def check_source_entries(registry):
         raise ValueError(f"Registry validation failed:\n{problem_text}")
 
 
-def count_sources(registry):
-    counts = {}
-
-    for section_name in [
-        "primary_sources",
-        "user_prepared_sources",
-        "external_evaluation_sources",
-    ]:
-        sources = registry.get(section_name, {})
-        enabled_count = sum(
-            1 for source in sources.values() if source.get("enabled", False)
-        )
-
-        counts[section_name] = {
-            "total": len(sources),
-            "enabled": enabled_count,
-        }
-
-    return counts
-
-
-def print_summary(registry, source_counts, config_path):
+def summarize_registry(registry, config_path):
     print(f"Registry: {config_path}")
     print(f"Schema version: {registry.get('schema_version')}")
     print(f"Project: {registry.get('project_name')}")
     print()
 
-    for section_name, counts in source_counts.items():
-        readable_name = section_name.replace("_", " ").title()
-        print(
-            f"{readable_name}: "
-            f"{counts['enabled']} enabled out of {counts['total']}"
+    for section_name in source_sections:
+        sources = registry.get(section_name, {})
+        enabled = sum(
+            1 for details in sources.values() if details.get("enabled", False)
         )
+        readable_name = section_name.replace("_", " ").title()
+        print(f"{readable_name}: {enabled} enabled out of {len(sources)}")
 
     language_names = [
         details.get("name", language_code)
@@ -126,10 +106,8 @@ def parse_arguments():
 def main():
     arguments = parse_arguments()
     registry = read_registry(arguments.config)
-    check_required_sections(registry)
-    check_source_entries(registry)
-    source_counts = count_sources(registry)
-    print_summary(registry, source_counts, arguments.config)
+    validate_registry(registry)
+    summarize_registry(registry, arguments.config)
 
 
 if __name__ == "__main__":
