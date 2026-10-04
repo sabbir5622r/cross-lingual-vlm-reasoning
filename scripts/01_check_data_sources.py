@@ -245,8 +245,12 @@ def parse_arguments():
         type=Path,
         default=Path("configs/data_sources.yaml"),
     )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=20,
+    )
     return parser.parse_args()
-
 
 def main():
     arguments = parse_arguments()
@@ -256,6 +260,9 @@ def main():
 
     local_results = inspect_local_sources(registry)
     print_local_summary(local_results)
+
+    page_results = check_source_pages(registry, arguments.timeout)
+    print_page_summary(page_results)
 
 if __name__ == "__main__":
     main()
