@@ -167,6 +167,77 @@ def print_local_summary(local_results):
             f"{readable_size(result['total_bytes'])}"
         )
 
+def check_source_page(source, timeout_seconds):
+    import requests
+
+    details = source["details"]
+    source_page = details.get("source_page")
+
+    if not source_page:
+        return {
+            "section": source["section"],
+            "name": source["name"],
+            "source_page": None,
+            "status": "not_listed",
+            "status_code": None,
+            "error": None,
+        }
+
+    try:
+        response = requests.get(
+            source_page,
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=timeout_seconds,
+            stream=True,
+            allow_redirects=True,
+        )
+        status_code = response.status_code
+        response.close()
+
+        status = "available" if 200 <= status_code < 400 else "unavailable"
+
+        return {
+            "section": source["section"],
+            "name": source["name"],
+            "source_page": source_page,
+            "status": status,
+            "status_code": status_code,
+            "error": None,
+        }
+    except requests.RequestException as error:
+        return {
+            "section": source["section"],
+            "name": source["name"],
+            "source_page": source_page,
+            "status": "error",
+            "status_code": None,
+            "error": str(error),
+        }
+
+
+def check_source_pages(registry, timeout_seconds=20):
+    return [
+        check_source_page(source, timeout_seconds)
+        for source in gather_sources(registry)
+        if source["details"].get("enabled", False)
+    ]
+
+
+def print_page_summary(page_results):
+    print()
+    print("Dataset source pages")
+
+    for result in page_results:
+        status_code = result["status_code"]
+
+        if status_code is None:
+            print(f"{result['name']}: {result['status']}")
+        else:
+            print(
+                f"{result['name']}: {result['status']} "
+                f"(HTTP {status_code})"
+            )
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -183,6 +254,8 @@ def main():
     validate_registry(registry)
     summarize_registry(registry, arguments.config)
 
+    local_results = inspect_local_sources(registry)
+    print_local_summary(local_results)
 
 if __name__ == "__main__":
     main()
