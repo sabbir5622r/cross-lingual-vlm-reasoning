@@ -238,6 +238,84 @@ def print_page_summary(page_results):
                 f"(HTTP {status_code})"
             )
 
+def check_huggingface_source(source):
+    from huggingface_hub import HfApi
+
+    details = source["details"]
+    dataset_id = details.get("dataset_id")
+
+    if not dataset_id:
+        return None
+
+    try:
+        dataset_info = HfApi().dataset_info(dataset_id)
+
+        return {
+            "section": source["section"],
+            "name": source["name"],
+            "dataset_id": dataset_id,
+            "status": "available",
+            "private": bool(dataset_info.private),
+            "gated": dataset_info.gated,
+            "file_count": len(dataset_info.siblings or []),
+            "last_modified": (
+                str(dataset_info.last_modified)
+                if dataset_info.last_modified
+                else None
+            ),
+            "error": None,
+        }
+    except Exception as error:
+        return {
+            "section": source["section"],
+            "name": source["name"],
+            "dataset_id": dataset_id,
+            "status": "error",
+            "private": None,
+            "gated": None,
+            "file_count": None,
+            "last_modified": None,
+            "error": str(error),
+        }
+
+
+def check_huggingface_sources(registry):
+    results = []
+
+    for source in gather_sources(registry):
+        details = source["details"]
+
+        if not details.get("enabled", False):
+            continue
+
+        if details.get("download_mode") != "huggingface":
+            continue
+
+        result = check_huggingface_source(source)
+
+        if result:
+            results.append(result)
+
+    return results
+
+
+def print_huggingface_summary(huggingface_results):
+    print()
+    print("Hugging Face datasets")
+
+    if not huggingface_results:
+        print("No enabled Hugging Face datasets found.")
+        return
+
+    for result in huggingface_results:
+        if result["status"] == "available":
+            print(
+                f"{result['dataset_id']}: available, "
+                f"{result['file_count']} repository files"
+            )
+        else:
+            print(f"{result['dataset_id']}: {result['status']}")
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -264,5 +342,8 @@ def main():
     page_results = check_source_pages(registry, arguments.timeout)
     print_page_summary(page_results)
 
+    huggingface_results = check_huggingface_sources(registry)
+    print_huggingface_summary(huggingface_results)
+    
 if __name__ == "__main__":
     main()
