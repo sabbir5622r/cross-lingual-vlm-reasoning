@@ -2,7 +2,7 @@
 
 Official research repository for:
 
-**Does Visual Reasoning Transfer Across Languages? Diagnosing and Improving Cross-Lingual Grounding in Vision-Language Models**
+**A Systamatic Study of Diagnosing and Improving Cross-Lingual Grounding in Vision-Language Models**
 
 ## Project objective
 
@@ -15,13 +15,3 @@ The study evaluates both:
 
 The project also investigates Cross-Lingual Visual Grounding Consistency Training using LoRA or QLoRA.
 
-## Research workflow
-
-```text
-VS Code
-→ GitHub
-→ Kaggle or external GPU
-→ Saved experimental results
-→ Analysis and statistical testing
-→ Figures and tables
-→ CVPR paper
