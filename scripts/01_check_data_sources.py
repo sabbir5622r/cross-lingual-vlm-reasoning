@@ -93,6 +93,80 @@ def summarize_registry(registry, config_path):
     print("Registry validation passed.")
 
 
+def gather_sources(registry):
+    gathered_sources = []
+
+    for section_name in source_sections:
+        for source_name, details in registry.get(section_name, {}).items():
+            gathered_sources.append(
+                {
+                    "section": section_name,
+                    "name": source_name,
+                    "details": details,
+                }
+            )
+
+    return gathered_sources
+
+
+def inspect_local_source(source):
+    details = source["details"]
+    local_path = Path(details["local_directory"])
+
+    files = []
+
+    if local_path.exists():
+        files = [
+            file_path
+            for file_path in local_path.rglob("*")
+            if file_path.is_file() and file_path.name != ".gitkeep"
+        ]
+
+    total_bytes = sum(file_path.stat().st_size for file_path in files)
+
+    return {
+        "section": source["section"],
+        "name": source["name"],
+        "enabled": details.get("enabled", False),
+        "local_directory": str(local_path),
+        "directory_exists": local_path.exists(),
+        "file_count": len(files),
+        "total_bytes": total_bytes,
+        "files": [str(file_path) for file_path in files],
+    }
+
+
+def inspect_local_sources(registry):
+    return [
+        inspect_local_source(source)
+        for source in gather_sources(registry)
+        if source["details"].get("enabled", False)
+    ]
+
+
+def readable_size(byte_count):
+    size = float(byte_count)
+
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size < 1024 or unit == "TB":
+            return f"{size:.2f} {unit}"
+        size /= 1024
+
+    return f"{size:.2f} TB"
+
+
+def print_local_summary(local_results):
+    print()
+    print("Local dataset inspection")
+
+    for result in local_results:
+        state = "found" if result["directory_exists"] else "missing"
+        print(
+            f"{result['name']}: {state}, "
+            f"{result['file_count']} files, "
+            f"{readable_size(result['total_bytes'])}"
+        )
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
