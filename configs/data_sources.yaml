@@ -1,0 +1,135 @@
+schema_version: 1
+project_name: cross-lingual-vlm-reasoning
+
+primary_sources:
+  vqa_v2:
+    enabled: true
+    role: primary_general_vqa
+    provider: VQA Consortium
+    source_page: https://visualqa.org/download.html
+    download_mode: official_files
+    languages:
+      - en
+    required_components:
+      - validation_questions
+      - validation_annotations
+      - validation_complementary_pairs
+      - coco_val2014_images
+    local_directory: data/raw/vqa_v2
+    redistribution_status: verify_before_release
+
+user_prepared_sources:
+  multilingual_alignment:
+    enabled: true
+    role: primary_parallel_language_data
+    provider: user_prepared
+    download_mode: manual_local_input
+    languages:
+      - en
+      - bn
+      - hi
+      - ur
+      - en_bn_code_switch
+    expected_format:
+      - csv
+      - parquet
+      - jsonl
+    local_directory: data/raw/multilingual_alignment
+    provenance_status: pending_audit
+
+  cultural_multilingual_vqa:
+    enabled: true
+    role: cultural_stress_test
+    provider: user_prepared
+    download_mode: manual_local_input
+    languages:
+      - en
+      - bn
+      - hi
+      - ur
+    optional_varieties:
+      - barishali
+      - chittagonian
+      - noakhali
+      - rangpuri
+      - sylheti
+    expected_format:
+      - csv
+      - parquet
+      - jsonl
+    local_directory: data/raw/cultural_multilingual_vqa
+    provenance_status: pending_audit
+
+external_evaluation_sources:
+  cvqa:
+    enabled: true
+    role: external_cultural_evaluation
+    provider: Hugging Face
+    dataset_id: afaji/cvqa
+    source_page: https://huggingface.co/datasets/afaji/cvqa
+    download_mode: huggingface
+    local_directory: data/raw/cvqa
+    redistribution_status: verify_dataset_card
+
+  xgqa:
+    enabled: true
+    role: external_cross_lingual_evaluation
+    provider: Hugging Face
+    dataset_id: floschne/xgqa
+    source_page: https://huggingface.co/datasets/floschne/xgqa
+    download_mode: huggingface
+    local_directory: data/raw/xgqa
+    redistribution_status: verify_dataset_card
+
+  banglaverse:
+    enabled: false
+    role: optional_regional_bangla_stress_test
+    provider: external_repository
+    source_page: https://github.com/faiyazabdullah/BanglaVerse
+    download_mode: manual_review
+    local_directory: data/raw/banglaverse
+    reason_disabled: verify_overlap_with_existing_cultural_data
+
+canonical_languages:
+  en:
+    name: English
+    script: Latin
+    required: true
+
+  bn:
+    name: Bangla
+    script: Bengali
+    required: true
+
+  hi:
+    name: Hindi
+    script: Devanagari
+    required: true
+
+  ur:
+    name: Urdu
+    script: Perso-Arabic
+    required: true
+
+  en_bn_code_switch:
+    name: English-Bangla code-switched
+    script: Mixed
+    required: true
+
+storage:
+  commit_large_data_to_git: false
+  raw_data_location: data/raw
+  interim_data_location: data/interim
+  processed_data_location: data/processed
+  split_location: data/splits
+  manifest_location: data/manifests
+
+split_policy:
+  seed: 42
+  grouping_keys:
+    - source_dataset
+    - image_id
+    - intervention_family_id
+  prevent_image_overlap: true
+  prevent_intervention_family_overlap: true
+  prevent_question_group_overlap: true
