@@ -1,5 +1,7 @@
 import argparse
 from pathlib import Path
+import json
+from datetime import datetime, timezone
 
 import yaml
 
@@ -316,6 +318,35 @@ def print_huggingface_summary(huggingface_results):
         else:
             print(f"{result['dataset_id']}: {result['status']}")
 
+def build_report(
+    registry,
+    config_path,
+    local_results,
+    page_results,
+    huggingface_results,
+):
+    return {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "project_name": registry.get("project_name"),
+        "schema_version": registry.get("schema_version"),
+        "registry_path": str(config_path),
+        "local_sources": local_results,
+        "source_pages": page_results,
+        "huggingface_sources": huggingface_results,
+    }
+
+
+def save_report(report, output_path):
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with output_path.open("w", encoding="utf-8") as output_file:
+        json.dump(report, output_file, ensure_ascii=False, indent=2)
+
+    print()
+    print(f"Report saved: {output_path}")
+
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -324,9 +355,18 @@ def parse_arguments():
         default=Path("configs/data_sources.yaml"),
     )
     parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/manifests/data_source_report.json"),
+    )
+    parser.add_argument(
         "--timeout",
         type=int,
         default=20,
+    )
+    parser.add_argument(
+        "--skip-web",
+        action="store_true",
     )
     return parser.parse_args()
 
@@ -339,11 +379,26 @@ def main():
     local_results = inspect_local_sources(registry)
     print_local_summary(local_results)
 
-    page_results = check_source_pages(registry, arguments.timeout)
-    print_page_summary(page_results)
+    if arguments.skip_web:
+        page_results = []
+        huggingface_results = []
+        print()
+        print("Web checks skipped.")
+    else:
+        page_results = check_source_pages(registry, arguments.timeout)
+        print_page_summary(page_results)
 
-    huggingface_results = check_huggingface_sources(registry)
-    print_huggingface_summary(huggingface_results)
-    
+        huggingface_results = check_huggingface_sources(registry)
+        print_huggingface_summary(huggingface_results)
+
+    report = build_report(
+        registry,
+        arguments.config,
+        local_results,
+        page_results,
+        huggingface_results,
+    )
+    save_report(report, arguments.output)
+
 if __name__ == "__main__":
     main()
