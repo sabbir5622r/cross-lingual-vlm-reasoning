@@ -143,6 +143,97 @@ def save_pair_table(rows, output_dir):
 
     return pair_table
 
+def summarize_pair_table(pair_table):
+    from collections import Counter
+
+    same_question_count = int(pair_table["same_question"].sum())
+    changed_answer_count = int(pair_table["answer_changed"].sum())
+    total_pairs = len(pair_table)
+
+    question_types = Counter(
+        pair_table["question_type_a"].dropna().astype(str)
+    )
+    answer_types = Counter(
+        pair_table["answer_type_a"].dropna().astype(str)
+    )
+
+    summary = {
+        "pair_count": total_pairs,
+        "unique_question_ids": int(
+            len(
+                set(pair_table["question_id_a"])
+                | set(pair_table["question_id_b"])
+            )
+        ),
+        "unique_image_ids": int(
+            len(
+                set(pair_table["image_id_a"])
+                | set(pair_table["image_id_b"])
+            )
+        ),
+        "same_question_count": same_question_count,
+        "same_question_rate": same_question_count / total_pairs,
+        "changed_answer_count": changed_answer_count,
+        "changed_answer_rate": changed_answer_count / total_pairs,
+        "question_type_counts": dict(question_types.most_common()),
+        "answer_type_counts": dict(answer_types.most_common()),
+    }
+
+    return summary
+
+
+def check_pair_summary(summary):
+    problems = []
+
+    if summary["pair_count"] != 95144:
+        problems.append(
+            f"Expected 95144 pairs, found {summary['pair_count']}"
+        )
+
+    if summary["same_question_count"] != summary["pair_count"]:
+        difference = (
+            summary["pair_count"] - summary["same_question_count"]
+        )
+        problems.append(
+            f"{difference} pairs do not have matching question text"
+        )
+
+    if problems:
+        problem_text = "\n".join(f"- {problem}" for problem in problems)
+        raise ValueError(f"Pair validation failed:\n{problem_text}")
+
+
+def save_summary(summary, report_path):
+    from datetime import datetime, timezone
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
+    report = {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "dataset": "VQA v2 validation complementary pairs",
+        **summary,
+    }
+
+    with report_path.open("w", encoding="utf-8") as output_file:
+        json.dump(report, output_file, ensure_ascii=False, indent=2)
+
+    print()
+    print("Pair summary")
+    print(f"Pairs: {summary['pair_count']}")
+    print(f"Unique questions: {summary['unique_question_ids']}")
+    print(f"Unique images: {summary['unique_image_ids']}")
+    print(
+        f"Same questions: "
+        f"{summary['same_question_count']} "
+        f"({summary['same_question_rate']:.2%})"
+    )
+    print(
+        f"Changed answers: "
+        f"{summary['changed_answer_count']} "
+        f"({summary['changed_answer_rate']:.2%})"
+    )
+    print(f"Report: {report_path}")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -156,6 +247,11 @@ def parse_arguments():
         type=Path,
         default=Path("data/processed/vqa_v2"),
     )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=Path("data/manifests/vqa_v2_pair_report.json"),
+    )
     return parser.parse_args()
 
 
@@ -165,7 +261,13 @@ def main():
     check_input_counts(questions, annotations, pairs)
 
     pair_rows = build_pair_rows(questions, annotations, pairs)
-    save_pair_table(pair_rows, arguments.output_dir)
+    pair_table = save_pair_table(pair_rows, arguments.output_dir)
+    summary = summarize_pair_table(pair_table)
+    check_pair_summary(summary)
+    save_summary(summary, arguments.report)
+
+    print()
+    print("Complementary pair preparation passed.")
 
 
 if __name__ == "__main__":
