@@ -1,0 +1,49 @@
+{
+  "created_at_utc": "2026-10-05T15:38:20.311794+00:00",
+  "selection_seed": 2027,
+  "source_pairs": 20106,
+  "core_pairs": 4000,
+  "core_unique_images": 8000,
+  "reserve_pairs": 2592,
+  "reserve_unique_images": 5184,
+  "category_quotas": {
+    "binary_perception": 700,
+    "counting": 550,
+    "attribute": 550,
+    "object_recognition": 500,
+    "activity": 450,
+    "spatial": 450,
+    "relation": 350,
+    "other": 250,
+    "visual_commonsense": 150,
+    "ocr": 50
+  },
+  "selected_category_counts": {
+    "binary_perception": 700,
+    "counting": 550,
+    "attribute": 550,
+    "object_recognition": 500,
+    "activity": 450,
+    "spatial": 450,
+    "relation": 350,
+    "other": 250,
+    "visual_commonsense": 150,
+    "ocr": 50
+  },
+  "reserve_category_counts": {
+    "binary_perception": 1253,
+    "counting": 381,
+    "attribute": 339,
+    "relation": 162,
+    "other": 146,
+    "spatial": 116,
+    "object_recognition": 106,
+    "activity": 70,
+    "ocr": 17,
+    "visual_commonsense": 2
+  },
+  "core_pair_id_sha256": "8fc4b345aedb1a0d606e9727e6a7e5de77c29589c6277cf5a5b4b0f52baa9674",
+  "reserve_pair_id_sha256": "93719dea33932b14fc9ae4873facdd97280c1f76acc73f64b0fd1ca92067adef",
+  "image_overlap_between_core_and_reserve": 0,
+  "category_labels": "provisional_heuristic_labels"
+}
