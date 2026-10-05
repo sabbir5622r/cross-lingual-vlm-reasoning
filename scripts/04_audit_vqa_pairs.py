@@ -205,6 +205,89 @@ def save_audit_table(audit_table, output_path):
     audit_table.to_parquet(output_path, index=False)
     print(f"Audit table: {output_path}")
 
+def select_candidates(audit_table, minimum_votes):
+    selected = (
+        audit_table["same_question"]
+        & audit_table["answer_changed"]
+        & audit_table["same_answer_type"]
+        & (audit_table["minimum_label_votes"] >= minimum_votes)
+    )
+
+    candidates = audit_table.loc[selected].copy()
+    candidates["agreement_rule"] = f"minimum_{minimum_votes}_of_10"
+    candidates = candidates.sort_values(
+        by=[
+            "minimum_label_votes",
+            "pair_id",
+        ],
+        ascending=[
+            False,
+            True,
+        ],
+    ).reset_index(drop=True)
+
+    return candidates
+
+
+def save_candidates(candidates, output_dir):
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    parquet_path = output_dir / "vqa_v2_visual_candidates.parquet"
+    csv_path = output_dir / "vqa_v2_visual_candidates.csv"
+
+    candidates.to_parquet(parquet_path, index=False)
+    candidates.to_csv(csv_path, index=False, encoding="utf-8")
+
+    print()
+    print(f"Candidate pairs: {len(candidates)}")
+    print(f"Candidate Parquet: {parquet_path}")
+    print(f"Candidate CSV: {csv_path}")
+
+
+def make_report(audit_table, candidates, minimum_votes):
+    from datetime import datetime, timezone
+
+    threshold_counts = {}
+
+    for vote_threshold in [3, 5, 6, 7, 8, 9]:
+        selected = (
+            audit_table["same_question"]
+            & audit_table["answer_changed"]
+            & audit_table["same_answer_type"]
+            & (audit_table["minimum_label_votes"] >= vote_threshold)
+        )
+        threshold_counts[str(vote_threshold)] = int(selected.sum())
+
+    return {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "total_pairs": len(audit_table),
+        "same_question_pairs": int(audit_table["same_question"].sum()),
+        "different_answer_pairs": int(audit_table["answer_changed"].sum()),
+        "same_answer_pairs": int((~audit_table["answer_changed"]).sum()),
+        "same_answer_type_pairs": int(audit_table["same_answer_type"].sum()),
+        "answer_type_mismatch_pairs": int(
+            (~audit_table["same_answer_type"]).sum()
+        ),
+        "minimum_votes_selected": minimum_votes,
+        "candidate_pairs": len(candidates),
+        "threshold_counts": threshold_counts,
+        "answer_type_counts": {
+            str(name): int(count)
+            for name, count in candidates["answer_type_a"]
+            .value_counts()
+            .items()
+        },
+    }
+
+
+def save_report(report, report_path):
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with report_path.open("w", encoding="utf-8") as output_file:
+        json.dump(report, output_file, ensure_ascii=False, indent=2)
+
+    print(f"Audit report: {report_path}")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -225,25 +308,62 @@ def parse_arguments():
         ),
     )
     parser.add_argument(
-        "--output",
+        "--audit-output",
         type=Path,
         default=Path(
             "data/interim/vqa_v2/"
             "vqa_v2_pair_audit.parquet"
         ),
     )
+    parser.add_argument(
+        "--candidate-dir",
+        type=Path,
+        default=Path("data/processed/vqa_v2"),
+    )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=Path(
+            "data/manifests/vqa_v2_candidate_report.json"
+        ),
+    )
+    parser.add_argument(
+        "--minimum-votes",
+        type=int,
+        default=6,
+    )
     return parser.parse_args()
 
 
 def main():
     arguments = parse_arguments()
+
+    if not 1 <= arguments.minimum_votes <= 10:
+        raise ValueError("--minimum-votes must be between 1 and 10")
+
     annotations = load_annotations(arguments.annotations)
     profiles = make_answer_profiles(annotations)
     pair_table = load_pair_table(arguments.pairs)
     audit_table = build_pair_audit(pair_table, profiles)
 
     show_threshold_results(audit_table)
-    save_audit_table(audit_table, arguments.output)
+    save_audit_table(audit_table, arguments.audit_output)
+
+    candidates = select_candidates(
+        audit_table,
+        arguments.minimum_votes,
+    )
+    save_candidates(candidates, arguments.candidate_dir)
+
+    report = make_report(
+        audit_table,
+        candidates,
+        arguments.minimum_votes,
+    )
+    save_report(report, arguments.report)
+
+    print()
+    print("Candidate-pair audit completed.")
 
 
 if __name__ == "__main__":

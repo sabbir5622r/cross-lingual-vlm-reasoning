@@ -1,0 +1,24 @@
+{
+  "created_at_utc": "2026-10-05T14:38:52.456681+00:00",
+  "total_pairs": 95144,
+  "same_question_pairs": 95144,
+  "different_answer_pairs": 85431,
+  "same_answer_pairs": 9713,
+  "same_answer_type_pairs": 94350,
+  "answer_type_mismatch_pairs": 794,
+  "minimum_votes_selected": 6,
+  "candidate_pairs": 50068,
+  "threshold_counts": {
+    "3": 74797,
+    "5": 58450,
+    "6": 50068,
+    "7": 41640,
+    "8": 33908,
+    "9": 25369
+  },
+  "answer_type_counts": {
+    "yes/no": 27231,
+    "other": 15568,
+    "number": 7269
+  }
+}
