@@ -133,6 +133,67 @@ def extract_downloaded_files(downloaded_files, output_directory):
         extract_archive(archive_path, output_directory)
 
 
+def read_json(json_path):
+    import json
+
+    with json_path.open("r", encoding="utf-8") as input_file:
+        return json.load(input_file)
+
+
+def validate_vqa_metadata(output_directory):
+    expected_files = {
+        "questions": output_directory
+        / "v2_OpenEnded_mscoco_val2014_questions.json",
+        "annotations": output_directory
+        / "v2_mscoco_val2014_annotations.json",
+        "complementary_pairs": output_directory
+        / "v2_mscoco_val2014_complementary_pairs.json",
+    }
+
+    missing_files = [
+        str(file_path)
+        for file_path in expected_files.values()
+        if not file_path.exists()
+    ]
+
+    if missing_files:
+        missing_text = "\n".join(missing_files)
+        raise FileNotFoundError(f"Missing extracted files:\n{missing_text}")
+
+    questions = read_json(expected_files["questions"]).get("questions", [])
+    annotations = read_json(expected_files["annotations"]).get("annotations", [])
+    complementary_pairs = read_json(expected_files["complementary_pairs"])
+
+    results = {
+        "question_count": len(questions),
+        "annotation_count": len(annotations),
+        "complementary_pair_count": len(complementary_pairs),
+        "question_count_matches": len(questions) == 214354,
+        "annotation_count_matches": len(annotations) == 214354,
+        "pair_count_matches": len(complementary_pairs) == 95144,
+    }
+
+    print()
+    print("VQA v2 metadata validation")
+    print(f"Questions: {results['question_count']}")
+    print(f"Annotations: {results['annotation_count']}")
+    print(f"Complementary pairs: {results['complementary_pair_count']}")
+
+    checks_passed = all(
+        [
+            results["question_count_matches"],
+            results["annotation_count_matches"],
+            results["pair_count_matches"],
+        ]
+    )
+
+    if not checks_passed:
+        raise ValueError("One or more VQA v2 record counts are unexpected.")
+
+    print("Official record counts verified.")
+    return results
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -166,8 +227,10 @@ def main():
     if not arguments.skip_extraction:
         extract_downloaded_files(downloaded_files, arguments.output_dir)
 
+    validation_results = validate_vqa_metadata(arguments.output_dir)
+
     print()
-    print("VQA v2 download and extraction completed.")
+    print("VQA v2 metadata preparation passed.")
 
 
 if __name__ == "__main__":
