@@ -193,6 +193,55 @@ def validate_vqa_metadata(output_directory):
     print("Official record counts verified.")
     return results
 
+def calculate_sha256(file_path, chunk_size=1024 * 1024):
+    import hashlib
+
+    checksum = hashlib.sha256()
+
+    with file_path.open("rb") as input_file:
+        while True:
+            data_chunk = input_file.read(chunk_size)
+
+            if not data_chunk:
+                break
+
+            checksum.update(data_chunk)
+
+    return checksum.hexdigest()
+
+
+def create_download_manifest(downloaded_files, validation_results):
+    from datetime import datetime, timezone
+
+    file_records = []
+
+    for file_path in downloaded_files:
+        file_records.append(
+            {
+                "file_name": file_path.name,
+                "file_size": file_path.stat().st_size,
+                "sha256": calculate_sha256(file_path),
+            }
+        )
+
+    return {
+        "dataset": "VQA v2 validation",
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "files": file_records,
+        "validation": validation_results,
+    }
+
+
+def save_manifest(manifest, manifest_path):
+    import json
+
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with manifest_path.open("w", encoding="utf-8") as output_file:
+        json.dump(manifest, output_file, ensure_ascii=False, indent=2)
+
+    print(f"Manifest saved: {manifest_path}")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -205,6 +254,11 @@ def parse_arguments():
         "--output-dir",
         type=Path,
         default=Path("data/raw/vqa_v2/extracted"),
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=Path("data/manifests/vqa_v2_download_manifest.json"),
     )
     parser.add_argument("--include-images", action="store_true")
     parser.add_argument("--skip-extraction", action="store_true")
@@ -228,9 +282,11 @@ def main():
         extract_downloaded_files(downloaded_files, arguments.output_dir)
 
     validation_results = validate_vqa_metadata(arguments.output_dir)
+    manifest = create_download_manifest(downloaded_files, validation_results)
+    save_manifest(manifest, arguments.manifest)
 
     print()
-    print("VQA v2 metadata preparation passed.")
+    print("VQA v2 metadata preparation completed successfully.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,29 @@
+{
+  "dataset": "VQA v2 validation",
+  "created_at_utc": "2026-10-05T12:39:37.879479+00:00",
+  "files": [
+    {
+      "file_name": "v2_Annotations_Val_mscoco.zip",
+      "file_size": 10518930,
+      "sha256": "0caae7c8d1dafd852727f5ac046bc1efca9b72026bd6ffa34fc489f3a7b3291e"
+    },
+    {
+      "file_name": "v2_Questions_Val_mscoco.zip",
+      "file_size": 3494929,
+      "sha256": "e71f6c5c3e97a51d050f28243e262b28cd0c48d11a6b4632d769d30d3f93222a"
+    },
+    {
+      "file_name": "v2_Complementary_Pairs_Val_mscoco.zip",
+      "file_size": 772608,
+      "sha256": "4788add4425f17d301fbdbeb42b9ad855122ffc420ad23b5184af21dc3d2e716"
+    }
+  ],
+  "validation": {
+    "question_count": 214354,
+    "annotation_count": 214354,
+    "complementary_pair_count": 95144,
+    "question_count_matches": true,
+    "annotation_count_matches": true,
+    "pair_count_matches": true
+  }
+}
