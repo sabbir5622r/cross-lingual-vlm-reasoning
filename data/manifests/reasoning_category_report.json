@@ -1,0 +1,51 @@
+{
+  "created_at_utc": "2026-10-05T15:23:37.309736+00:00",
+  "seed": 42,
+  "source_pairs": 20106,
+  "image_disjoint_pairs": 6598,
+  "source_unique_images": 19407,
+  "image_disjoint_unique_images": 13196,
+  "source_category_counts": {
+    "binary_perception": 9307,
+    "counting": 2919,
+    "attribute": 2272,
+    "relation": 1296,
+    "other": 1111,
+    "spatial": 1012,
+    "object_recognition": 1002,
+    "activity": 920,
+    "visual_commonsense": 163,
+    "ocr": 101,
+    "multi_step": 3
+  },
+  "image_disjoint_category_counts": {
+    "binary_perception": 1721,
+    "counting": 858,
+    "attribute": 837,
+    "object_recognition": 681,
+    "activity": 638,
+    "spatial": 617,
+    "relation": 503,
+    "other": 491,
+    "visual_commonsense": 159,
+    "ocr": 90,
+    "multi_step": 3
+  },
+  "answer_type_counts": {
+    "yes/no": 3005,
+    "other": 2735,
+    "number": 858
+  },
+  "pool_checks": {
+    "pairs": 20106,
+    "unique_pair_ids": 20106,
+    "unique_question_ids": 39865,
+    "unique_image_ids": 19407,
+    "duplicate_pair_ids": 0,
+    "repeated_question_uses": 347,
+    "repeated_image_uses": 20805,
+    "empty_english_questions": 0,
+    "empty_bangla_questions": 0
+  },
+  "category_status": "provisional_heuristic_labels"
+}

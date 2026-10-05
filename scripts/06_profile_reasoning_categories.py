@@ -294,6 +294,109 @@ def save_categorized_data(categorized, output_path):
     print(f"Categorized Parquet: {output_path}")
     print(f"Categorized CSV: {csv_path}")
 
+def make_image_disjoint_pool(categorized, seed):
+    shuffled = categorized.sample(
+        frac=1,
+        random_state=seed,
+    ).copy()
+
+    category_sizes = (
+        shuffled["reasoning_hint"]
+        .value_counts()
+        .to_dict()
+    )
+
+    shuffled["category_size"] = (
+        shuffled["reasoning_hint"]
+        .map(category_sizes)
+    )
+
+    shuffled = shuffled.sort_values(
+        by=["category_size", "reasoning_hint"],
+        ascending=[True, True],
+        kind="stable",
+    )
+
+    used_images = set()
+    selected_rows = []
+
+    for row in shuffled.itertuples(index=False):
+        first_image = int(row.image_id_a)
+        second_image = int(row.image_id_b)
+
+        if first_image in used_images or second_image in used_images:
+            continue
+
+        selected_rows.append(row._asdict())
+        used_images.add(first_image)
+        used_images.add(second_image)
+
+    image_disjoint = pd.DataFrame(selected_rows)
+    image_disjoint = image_disjoint.drop(
+        columns=["category_size"],
+        errors="ignore",
+    )
+    image_disjoint = image_disjoint.reset_index(drop=True)
+
+    return image_disjoint
+
+
+def build_category_report(
+    pool_summary,
+    categorized,
+    image_disjoint,
+    seed,
+):
+    from datetime import datetime, timezone
+
+    return {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "seed": seed,
+        "source_pairs": len(categorized),
+        "image_disjoint_pairs": len(image_disjoint),
+        "source_unique_images": int(
+            len(
+                set(categorized["image_id_a"])
+                | set(categorized["image_id_b"])
+            )
+        ),
+        "image_disjoint_unique_images": int(
+            len(
+                set(image_disjoint["image_id_a"])
+                | set(image_disjoint["image_id_b"])
+            )
+        ),
+        "source_category_counts": {
+            str(name): int(count)
+            for name, count in categorized["reasoning_hint"]
+            .value_counts()
+            .items()
+        },
+        "image_disjoint_category_counts": {
+            str(name): int(count)
+            for name, count in image_disjoint["reasoning_hint"]
+            .value_counts()
+            .items()
+        },
+        "answer_type_counts": {
+            str(name): int(count)
+            for name, count in image_disjoint["answer_type_a"]
+            .value_counts()
+            .items()
+        },
+        "pool_checks": pool_summary,
+        "category_status": "provisional_heuristic_labels",
+    }
+
+
+def save_report(report, report_path):
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with report_path.open("w", encoding="utf-8") as output_file:
+        json.dump(report, output_file, ensure_ascii=False, indent=2)
+
+    print(f"Report: {report_path}")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -305,24 +408,77 @@ def parse_arguments():
         ),
     )
     parser.add_argument(
-        "--output",
+        "--categorized-output",
         type=Path,
         default=Path(
             "data/interim/multilingual/"
             "vqa_en_bn_categorized.parquet"
         ),
     )
+    parser.add_argument(
+        "--disjoint-output",
+        type=Path,
+        default=Path(
+            "data/processed/multilingual/"
+            "vqa_en_bn_image_disjoint.parquet"
+        ),
+    )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=Path(
+            "data/manifests/reasoning_category_report.json"
+        ),
+    )
+    parser.add_argument("--seed", type=int, default=42)
     return parser.parse_args()
 
 
 def main():
     arguments = parse_arguments()
     pair_table = load_aligned_pairs(arguments.input)
-    inspect_pair_pool(pair_table)
+    pool_summary = inspect_pair_pool(pair_table)
 
     categorized = add_reasoning_hints(pair_table)
     show_category_summary(categorized)
-    save_categorized_data(categorized, arguments.output)
+    save_categorized_data(
+        categorized,
+        arguments.categorized_output,
+    )
+
+    image_disjoint = make_image_disjoint_pool(
+        categorized,
+        arguments.seed,
+    )
+    save_categorized_data(
+        image_disjoint,
+        arguments.disjoint_output,
+    )
+
+    report = build_category_report(
+        pool_summary,
+        categorized,
+        image_disjoint,
+        arguments.seed,
+    )
+    save_report(report, arguments.report)
+
+    print()
+    print("Image-disjoint pool")
+    print(f"Source pairs: {len(categorized)}")
+    print(f"Selected pairs: {len(image_disjoint)}")
+    print(
+        f"Unique selected images: "
+        f"{len(set(image_disjoint['image_id_a']) | set(image_disjoint['image_id_b']))}"
+    )
+
+    print()
+    print("Image-disjoint category counts")
+
+    for category_name, count in (
+        image_disjoint["reasoning_hint"].value_counts().items()
+    ):
+        print(f"{category_name}: {count}")
 
 
 if __name__ == "__main__":
