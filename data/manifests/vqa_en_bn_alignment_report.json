@@ -1,0 +1,17 @@
+{
+  "created_at_utc": "2026-10-05T15:16:37.031405+00:00",
+  "bangla_source": "Tahsin-Mayeesha/vqa_bn",
+  "translation_method": "automatic_google_translate",
+  "full_aligned_pairs": 46620,
+  "full_matching_bangla_questions": 46276,
+  "expected_full_aligned_pairs": 46620,
+  "expected_matching_bangla_questions": 46276,
+  "full_count_reproduced": true,
+  "matching_count_reproduced": true,
+  "clean_aligned_pairs": 20268,
+  "clean_matching_bangla_questions": 20106,
+  "image_mismatch_a": 0,
+  "image_mismatch_b": 0,
+  "ready_pairs": 20106,
+  "translation_verified": false
+}
