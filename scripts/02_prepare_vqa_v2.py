@@ -102,6 +102,37 @@ def download_vqa_files(download_directory, include_images):
     return downloaded_files
 
 
+def safe_member_path(output_directory, member_name):
+    output_root = output_directory.resolve()
+    member_path = (output_directory / member_name).resolve()
+
+    try:
+        member_path.relative_to(output_root)
+    except ValueError as error:
+        raise ValueError(f"Unsafe archive member: {member_name}") from error
+
+    return member_path
+
+
+def extract_archive(archive_path, output_directory):
+    import zipfile
+
+    output_directory.mkdir(parents=True, exist_ok=True)
+
+    with zipfile.ZipFile(archive_path, "r") as archive:
+        for member in archive.infolist():
+            safe_member_path(output_directory, member.filename)
+
+        archive.extractall(output_directory)
+
+    print(f"Extracted: {archive_path.name}")
+
+
+def extract_downloaded_files(downloaded_files, output_directory):
+    for archive_path in downloaded_files:
+        extract_archive(archive_path, output_directory)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -109,7 +140,13 @@ def parse_arguments():
         type=Path,
         default=Path("data/raw/vqa_v2/archives"),
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("data/raw/vqa_v2/extracted"),
+    )
     parser.add_argument("--include-images", action="store_true")
+    parser.add_argument("--skip-extraction", action="store_true")
     parser.add_argument("--show-files", action="store_true")
     return parser.parse_args()
 
@@ -126,8 +163,11 @@ def main():
         arguments.include_images,
     )
 
+    if not arguments.skip_extraction:
+        extract_downloaded_files(downloaded_files, arguments.output_dir)
+
     print()
-    print(f"Downloaded files: {len(downloaded_files)}")
+    print("VQA v2 download and extraction completed.")
 
 
 if __name__ == "__main__":
