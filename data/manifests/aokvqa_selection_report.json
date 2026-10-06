@@ -1,0 +1,47 @@
+{
+  "dataset": "A-OKVQA",
+  "source_version": "v1p0",
+  "source_split": "val",
+  "source_url": "https://prior-datasets.s3.us-east-2.amazonaws.com/aokvqa/aokvqa_v1p0.tar.gz",
+  "image_data_url": "https://huggingface.co/datasets/HuggingFaceM4/A-OKVQA/resolve/main/data/validation-00000-of-00001-b2bd0de231b6326a.parquet",
+  "annotation_path": "data/raw/aokvqa/aokvqa_v1p0_val.json",
+  "annotation_sha256": "fd90b05dec8d78d341b69d9516c54a9b30dd4c12c3545599dab5d6f725aba6b4",
+  "seed": 2027,
+  "target_size": 400,
+  "selected_questions": 400,
+  "selected_images": 400,
+  "reasoning_category": "visual_commonsense",
+  "answer_language": "English",
+  "failed_image_downloads": 0,
+  "failed_image_ids": [],
+  "direct_answer_agreement_counts": {
+    "1": 11,
+    "2": 60,
+    "3": 51,
+    "4": 48,
+    "5": 50,
+    "6": 60,
+    "7": 53,
+    "8": 21,
+    "9": 19,
+    "10": 27
+  },
+  "vqa_overlap_columns": [
+    "image_id_a",
+    "image_id_b",
+    "bangla_image_id_a",
+    "bangla_image_id_b",
+    "image_id_match_a",
+    "image_id_match_b"
+  ],
+  "selection_counts": {
+    "validation_records": 1145,
+    "valid_unique_candidates": 885,
+    "excluded_vqa_image_overlap": 241,
+    "invalid_records": 0
+  },
+  "parquet_path": "data/processed/benchmark/aokvqa_400.parquet",
+  "csv_path": "data/processed/benchmark/aokvqa_400.csv",
+  "image_directory": "data/raw/aokvqa/images",
+  "license": "See the official A-OKVQA and COCO licenses"
+}
