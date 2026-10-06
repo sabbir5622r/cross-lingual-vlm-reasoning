@@ -8,3 +8,7 @@ PyYAML
 requests
 scikit-learn
 tqdm
+torch
+transformers
+sentencepiece
+accelerate

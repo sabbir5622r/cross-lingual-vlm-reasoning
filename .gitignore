@@ -1,0 +1,5 @@
+*.zip
+kaggle_bundle_v1/
+data/raw/
+data/interim/
+data/processed/

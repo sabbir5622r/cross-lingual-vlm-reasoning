@@ -1,0 +1,19 @@
+{
+  "general_groups": 5000,
+  "general_stimuli": 9000,
+  "source_stimulus_counts": {
+    "aokvqa": 400,
+    "textvqa": 300,
+    "vqa_v2": 8000,
+    "xgqa": 300
+  },
+  "source_group_counts": {
+    "aokvqa": 400,
+    "textvqa": 300,
+    "vqa_v2": 4000,
+    "xgqa": 300
+  },
+  "cultural_groups": 500,
+  "answer_language": "English",
+  "parquet_path": "data/processed/benchmark/general_benchmark_canonical.parquet"
+}
