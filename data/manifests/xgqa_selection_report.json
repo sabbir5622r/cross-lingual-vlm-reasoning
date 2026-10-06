@@ -1,0 +1,19 @@
+{
+  "created_at_utc": "2026-10-06T04:29:33.555770+00:00",
+  "dataset": "floschne/xgqa",
+  "english_rows": 9666,
+  "bangla_rows": 9666,
+  "english_unique_images": 300,
+  "bangla_unique_images": 300,
+  "selected_groups": 300,
+  "selected_unique_images": 300,
+  "saved_images": 300,
+  "matching_image_ids": 300,
+  "matching_answers": 300,
+  "minimum_reasoning_score": 13,
+  "maximum_reasoning_score": 47,
+  "mean_reasoning_score": 29.14,
+  "selection_seed": 2027,
+  "selection_sha256": "90aee563a486f8577ca8093b9e87ca2c46d0d3491480092f531485219fd2122d",
+  "translation_verified": false
+}
