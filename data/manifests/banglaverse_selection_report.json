@@ -1,0 +1,52 @@
+{
+  "source": "FaiyazAbdullah114708/BanglaVerse",
+  "seed": 2027,
+  "common_images_across_four_languages": 1152,
+  "complete_multilingual_images": 1136,
+  "selected_images": 500,
+  "unique_selected_images": 500,
+  "incomplete_counts": {
+    "en": {
+      "question": 15,
+      "answer": 15,
+      "options": 15
+    },
+    "bn": {
+      "question": 15,
+      "answer": 15,
+      "options": 15
+    },
+    "hi": {
+      "question": 15,
+      "answer": 15,
+      "options": 15
+    },
+    "ur": {
+      "question": 16,
+      "answer": 16,
+      "options": 16
+    }
+  },
+  "domain_counts": {
+    "culture": 56,
+    "food": 56,
+    "history": 56,
+    "media_and_movies": 56,
+    "national_achievements": 56,
+    "nature": 55,
+    "personalities": 55,
+    "politics": 55,
+    "sports": 55
+  },
+  "languages": [
+    "English",
+    "Bangla",
+    "Hindi",
+    "Urdu"
+  ],
+  "parquet_path": "data/processed/cultural/banglaverse_500.parquet",
+  "csv_path": "data/processed/cultural/banglaverse_500.csv",
+  "image_directory": "data/raw/banglaverse/images",
+  "usage": "Separate external cultural stress test",
+  "license": "Apache-2.0"
+}
