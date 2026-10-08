@@ -12,3 +12,15 @@ torch
 transformers
 sentencepiece
 accelerate
+transformers==5.16.1
+accelerate>=1.2,<2
+huggingface_hub>=0.34,<2
+hf_xet
+pandas>=2.2,<3
+pyarrow>=17
+numpy>=1.26,<3
+Pillow>=10
+tqdm>=4.66
+scipy>=1.13
+matplotlib>=3.8
+jinja2>=3.1
