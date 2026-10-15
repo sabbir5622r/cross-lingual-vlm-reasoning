@@ -21,6 +21,85 @@ def clean(value):
     return value
 
 
+
+def prepare_answer(job, instruction):
+    mode = clean(job.get("answer_mode")) or "short_english"
+
+    if mode == "short_english":
+        return instruction, clean(job.get("options_json"))
+
+    if mode != "multiple_choice":
+        raise ValueError(f"Unsupported answer mode: {mode!r}")
+
+    def read_options(column):
+        value = clean(job.get(column))
+        return json.loads(value) if isinstance(value, str) else value
+
+    options = read_options("options_en_json")
+
+    if not isinstance(options, list) or len(options) < 2:
+        raise ValueError(f"Missing English choices: {job['variant_id']}")
+
+    if any(not isinstance(item, str) or not item.strip() for item in options):
+        raise ValueError(f"Invalid English choices: {job['variant_id']}")
+
+    options = list(options)
+    answer = str(job["answer_en"]).strip()
+
+    if answer not in [item.strip() for item in options]:
+        bangla = read_options("options_bn_json")
+
+        if not isinstance(bangla, list) or len(bangla) != len(options):
+            raise ValueError(f"Cannot align choices: {job['variant_id']}")
+
+        label = clean(job.get("answer_bn"))
+
+        if not isinstance(label, str) or not label.strip():
+            raise ValueError(f"Missing Bangla reference: {job['variant_id']}")
+
+        matches = [
+            index
+            for index, item in enumerate(bangla)
+            if isinstance(item, str) and item.strip() == label.strip()
+        ]
+
+        if len(matches) != 1:
+            raise ValueError(f"Ambiguous Bangla reference: {job['variant_id']}")
+
+        options[matches[0]] = answer
+
+    choice_fixes = {
+        "culture_0190": (
+            ["জামাই", "কনে", "বরযাত্রী", "বউ"],
+            ["Son-in-law", "Bride", "Groom's wedding procession", "Wife"],
+        ),
+        "culture_0380": (
+            ["দুপুর", "সকাল", "রাত", "বিকেল"],
+            ["Noon", "Morning", "Night", "Afternoon"],
+        ),
+    }
+
+    fix = choice_fixes.get(job["stimulus_id"])
+
+    if fix is not None:
+        expected_bangla, corrected_english = fix
+
+        if read_options("options_bn_json") != expected_bangla:
+            raise ValueError(f"Unexpected source choices: {job['variant_id']}")
+
+        options = list(corrected_english)
+
+    if len({item.strip().casefold() for item in options}) != len(options):
+        raise ValueError(f"Duplicate English choices: {job['variant_id']}")
+
+    if answer not in [item.strip() for item in options]:
+        raise ValueError(f"Answer absent from choices: {job['variant_id']}")
+
+    instruction += " Choose one of the English options. Return only its exact English text, without a letter or explanation."
+
+    return instruction, json.dumps(options, ensure_ascii=False)
+
+
 def run_inference(args, runner_class=Runner, revision_resolver=None):
     config = load_config(args.config)
     details = config["models"][args.model]
@@ -29,6 +108,8 @@ def run_inference(args, runner_class=Runner, revision_resolver=None):
     selected = select_rows(load_tables(folder), languages, args.sources, args.limit_groups, config["seed"])
     condition = args.condition
     jobs = make_jobs(selected, condition)
+    for job in jobs:
+        prepare_answer(job, config["instruction"])
     if condition == "paired_swap":
         questions = selected.set_index("variant_id")["question"].to_dict()
         lookup = selected.set_index(["stimulus_id", "language"])["question"].to_dict()
@@ -99,11 +180,8 @@ def run_inference(args, runner_class=Runner, revision_resolver=None):
                     image = opened.convert("RGB")
                 if condition == "blank":
                     image = Image.new("RGB", image.size, (127, 127, 127))
-            mode = clean(job.get("answer_mode"))
-            if mode and mode != "short_english":
-                raise ValueError(f"Unsupported answer mode {mode!r}; this experiment uses English short-answer scoring")
-            options = clean(job.get("options_json"))
-            inputs, prompt = runner.prepare(image, job["question"], config["instruction"], options)
+            instruction, options = prepare_answer(job, config["instruction"])
+            inputs, prompt = runner.prepare(image, job["question"], instruction, options)
             result = runner.generate(inputs, maximum)
             record = {key: clean(value) for key, value in job.items()}
             record.update(result)
