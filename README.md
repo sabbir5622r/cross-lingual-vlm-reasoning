@@ -29,4 +29,4 @@ The project also investigates Cross-Lingual Visual Grounding Consistency Trainin
 ## Status
 
 
-The Development of this research began in early 2026 and was subsequently paused. We plan to resume the research in early 2027 and prepare the paper for submission to CVPR in 2028.
+The Development of this research began in early 2026 and was subsequently paused. We plan to resume the research in early 2027 and prepare the paper for submission to CVPR in 2027.
